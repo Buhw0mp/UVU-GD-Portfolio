@@ -1,0 +1,57 @@
+//this is just here so I dont have to delete the snowman every single time
+select -all;
+delete;
+
+
+// This is for the base of the snowman and the nose.
+polySphere -name "base" -radius 3 -subdivisionsX 10 -subdivisionsY 10;
+move -relative 0 3 0;
+
+polySphere -name "mid" -radius 1 -subdivisionsX 10 -subdivisionsY 10;
+polySphere -e -radius 2;
+move -relative 0 6.5 0;
+
+polySphere -name "top" -radius 1.5 -subdivisionsX 10 -subdivisionsY 10;
+move -relative 0 9 0;
+
+polyCone -name "nose" -radius 0.2 -height 1 -subdivisionsX 7 -subdivisionsY 1 -subdivisionsZ 1;
+rotate -relative -objectSpace 90 0 0;
+move -relative 0 9.2 1.7;
+
+
+// These are for the eyes
+polySphere -name "left_Eye" -radius 0.15 -subdivisionsX 8 -subdivisionsY 8;
+move -relative -0.3 9.5 1.34;
+scale -absolute 1.3 1 0.5;
+
+duplicate -name "right_Eye" "left_Eye";
+move -absolute 0.3 9.5 1.34;
+
+
+// These are for the buttons
+polyCylinder -name "button_1" -radius 1 -height 2 -subdivisionsCaps 1 -subdivisionsX 8;
+rotate -relative -objectSpace 53.15 0 0;
+move -relative 0 7.692 1.56;
+scale -absolute 0.14 0.027 0.14;
+
+polyCylinder -name "button_2" -radius 1 -height 2 -subdivisionsCaps 1 -subdivisionsX 8;
+rotate -relative -objectSpace 65.537 0 0;
+move -relative 0 7.134 1.831;
+scale -absolute 0.14 0.027 0.14;
+
+polyCylinder -name "button_3" -radius 1 -height 2 -subdivisionsCaps 1 -subdivisionsX 8;
+rotate -relative -objectSpace 90.923 0 0;
+move -relative 0 6.516 1.924;
+scale -absolute 0.14 0.027 0.14;
+
+
+// These are for the arms
+polyCylinder -name "arm_Left" -radius 0.1 -height 3 -subdivisionsCaps 1 -subdivisionsX 8;
+rotate -relative 0 0 60;
+move -absolute -3.15 7.85 0;
+
+duplicate -name "arm_Right" "arm_Left";
+rotate -relative 0 0 60;
+move -absolute 3.15 7.85 0;
+
+
