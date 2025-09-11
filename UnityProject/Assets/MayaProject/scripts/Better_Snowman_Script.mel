@@ -1,0 +1,103 @@
+
+global proc float randSize(float $baseSize, float $variation, int $checkRand) {
+    if ($checkRand == 1) {
+        return $baseSize + (rand(-$variation, $variation));
+    } else {
+        return $baseSize;
+    }
+}
+
+global proc makeSnowman() {
+
+    // Clear everything at the start
+    select -all;
+    delete;
+
+    float $scale = 2.0;
+    // overall size control
+    string $modelName = "snowman";
+    // base name for objects
+    int $randomize = 1;
+    // toggles the random sizes (1 = on, 0 = off)
+    int $makeEyes = 1;
+    // toggle for eyes
+    float $spacing = 0.8 * $scale;
+    // Spacing for the body
+    int $makeButtons = 1;
+    // toggle for the buttoins
+
+    // Create base
+    float $baseRadius = randSize(3 * $scale, 0.5, $randomize);
+    polySphere -name ($modelName + "_base") -radius $baseRadius;
+    move -relative 0 $baseRadius 0;
+
+    // Create mid
+    float $midRadius = randSize(2 * $scale, 0.3, $randomize);
+    polySphere -name ($modelName + "_mid") -radius $midRadius;
+    move -relative 0 ($baseRadius + $midRadius + 1.5 * $spacing) 0;
+
+    // Create top
+    float $topRadius = randSize(1.5 * $scale, 0.2, $randomize);
+    polySphere -name ($modelName + "_top") -radius $topRadius;
+    move -relative 0 ($baseRadius + $midRadius + $topRadius + 2 * $spacing) 0;
+
+    // Nose
+    float $noseRadius = 0.4 * $scale;
+    float $noseLength = randSize(1.5 * $scale, 0.3, $randomize);
+    polyCone -name ($modelName + "_nose") -radius (0.2 * $scale) -height $noseLength;
+    rotate -relative -objectSpace 90 0 0;
+    move -relative 0 ($baseRadius + $midRadius + 2.2 * $topRadius) ($topRadius + 1);
+
+    // Eyes
+    if ($makeEyes) {
+        float $eyeRadius = 0.2 * $scale;
+        polySphere -name ($modelName + "_eyeL") -radius $eyeRadius;
+        move -relative ($topRadius * 0.4) ($baseRadius + $midRadius + $topRadius * 2.2) ($topRadius * 0.8);
+
+        duplicate -name ($modelName + "_eyeR");
+        move -relative ($topRadius * -0.8) 0 0;
+    }
+
+    // Buttons
+    if ($makeButtons) {
+        int $numButtons = 3;
+        for ($i = 0; $i < $numButtons; $i++) {
+            float $buttonRadius = 0.15 * $scale;
+
+            // Makes the button
+            string $btn[] = `polyCylinder -name ($modelName + "_button" + $i)
+                -radius $buttonRadius -height (0.05 * $scale) -subdivisionsX 8`;
+
+            // Rotates it forward
+            rotate -relative -objectSpace 90 0 0 $btn[0];
+
+            // Center of the mid sphere
+            float $midCenterY = $baseRadius + $midRadius + $spacing + 1.5;
+
+            // Figures out vertical placement spread over the mid section
+            // how tall the row of buttons is
+            float $spread = 0.8 * $midRadius;
+            float $yOffset = (($i - (($numButtons - 1) / 2.0)) * $spread / $numButtons);
+            float $yPos = $midCenterY + $yOffset;
+
+            // Figures out the Z offsett from the front of the snowman
+            // uses the mid radius and and pushes it a tiny bit forward
+            float $zPos = $midRadius + (0.05 * $scale);
+
+            //moves it to the right spot (hopefully)
+            move -absolute 0 $yPos $zPos $btn[0];
+
+        }
+    }
+
+}
+
+makeSnowman();
+
+
+
+
+
+
+
+
