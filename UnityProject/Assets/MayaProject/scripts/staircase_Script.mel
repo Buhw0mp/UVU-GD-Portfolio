@@ -1,0 +1,95 @@
+
+global proc GenerateStaircase(
+    int $numberOfStairs,
+    float $stairLength,
+    float $stairWidth,
+    float $stairHeight,
+    float $pillarRadius,
+    float $stepHeight,
+    float $stepRotation,
+    float $taperFactor,
+    float $pivotOffset)
+{
+    // clears everything at the start
+    select -all;
+    delete;
+
+    // failsafe for the taper variable so it doesn't explode
+    if ($taperFactor < 0.0) { $taperFactor = 0.0; }
+    if ($taperFactor > 1.0) { $taperFactor = 1.0; }
+
+    // makes a group for the whole staircase
+    string $staircaseGroup = `group -empty -name "spiralStaircase_group"`;
+
+    // creates the central collumn at origin, then lifts it so its base is at y=0
+    float $pillarHeight = ($numberOfStairs * $stepHeight) + $stairHeight;
+    string $pillarNodes[] = `polyCylinder
+        -radius $pillarRadius
+        -height $pillarHeight
+        -name "staircasePillar"`;
+    string $pillarTransform = $pillarNodes[0];
+    move -relative 0 ($pillarHeight / 2.0) 0 $pillarTransform;
+    parent $pillarTransform $staircaseGroup;
+
+    // figures out where to place the step on the pillar
+    float $innerFace = ($stairLength / 2.0);
+
+    // loops and makes each stair on the staircase
+    for ($i = 0; $i < $numberOfStairs; $i++)
+    {
+        // creates the stair cube centered at world origin and names it
+        string $stairNodes[] = `polyCube
+            -width $stairWidth
+            -height $stairHeight
+            -depth $stairLength
+            -name ("stair_" + $i)`;
+
+        // grabs the stair transform, and gains all the vertices of the cube
+        string $stairTransform = $stairNodes[0];
+        string $vertices[] = `ls -flatten ($stairTransform + ".vtx[*]")`;
+
+        // loops through all the vertices, and tapers the "inner ones"/the ones closest to the piller
+        // (I couldent fully figure this part out so I used AI to figuring out how to taper it)
+        float $epsilon = 0.001;
+        for ($v = 0; $v < size($vertices); $v++)
+        {
+            string $vert = $vertices[$v];
+            float $pos[] = `pointPosition -world $vert`;
+            if (abs($pos[2] - $innerFace) < $epsilon)
+            {
+                float $newX = $pos[0] * $taperFactor;
+                xform -worldSpace -translation $newX $pos[1] $pos[2] $vert;
+            }
+        }
+
+        // plops the step to be flush with the pillar
+        float $desiredInnerFaceWorldZ = -($pillarRadius + $pivotOffset);
+        float $deltaZ = $desiredInnerFaceWorldZ - $innerFace;
+        move -relative 0 0 $deltaZ $stairTransform;
+
+        //sets the pivot to that face, and makes a group for it
+        xform -worldSpace -pivots 0 0 $desiredInnerFaceWorldZ $stairTransform;
+        string $stepGroup = `group -empty -name ("step_grp_" + $i)`;
+        parent $stairTransform $stepGroup;
+
+        // rotates the step around the pillar
+        float $yRotation = $i * $stepRotation;
+        rotate -relative 0 $yRotation 0 $stepGroup;
+
+        // raise the step
+        float $yPosition = $i * $stepHeight;
+        move -relative 0 $yPosition 0 $stepGroup;
+
+        // throws it into the main group
+        parent $stepGroup $staircaseGroup;
+
+    }
+
+    print ("staircase made with " + $numberOfStairs + " steps.\n");
+}
+
+// numberOfStairs, stairLength, stairWidth, stairHeight, pillarRadius, stepHeight, stepRotation, taperFactor, pivotOffset
+GenerateStaircase(50, 9.0, 6.0, 0.35, 1.0, 0.65, 22.0, 0.5, 0.0);
+
+
+
