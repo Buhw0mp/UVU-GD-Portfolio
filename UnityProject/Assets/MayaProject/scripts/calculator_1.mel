@@ -1,0 +1,128 @@
+// Calculator script for Maya
+
+// Needs to do the following:
+
+// Calculate all of the numbers in the input array from left to right.
+// Return the result as a float data type.
+// Each function will require one parameter array for input numbers (e.g., float $input[]).
+// Create "sub-functions" to perform the operations listed below.
+
+// Sum (addition) of 2 or more float values
+// Difference (subtraction ) of 2 or more values
+// Multiplication of 2 or more values
+// Division of 2 or more values
+// Power (x raised power n, eg. x³)
+// Mean (or average)
+// Median
+
+
+global proc float addValues(float $input[])
+{
+    float $result = 0;
+    for ($num in $input)
+    {
+        $result += $num;
+    }
+    return $result;
+}
+
+global proc float subtractValues(float $input[])
+{
+    if (size($input) == 0) {
+        warning("No input values provided.");
+        return 0;
+    }
+    float $result = $input[0];
+    for ($i = 1; $i < size($input); $i++)
+    {
+        $result -= $input[$i];
+    }
+    return $result;
+}
+
+global proc float multiplyValues(float $input[])
+{
+    if (size($input) == 0) {
+        warning("No input values provided.");
+        return 0;
+    }
+    float $result = 1;
+    for ($num in $input)
+    {
+        $result *= $num;
+    }
+    return $result;
+}
+
+global proc float divideValues(float $input[])
+{
+    if (size($input) == 0) {
+        warning("No input values provided.");
+        return 0;
+    }
+    float $result = $input[0];
+    for ($i = 1; $i < size($input); $i++)
+    {
+        if ($input[$i] == 0)
+        {
+            warning("Cannot divide by zero. Returning the current result.");
+            return $result;
+        }
+        $result /= $input[$i];
+    }
+    return $result;
+}
+
+global proc float powerValues(float $input[]) {
+    if (size($input) < 2) {
+        warning("powerValues requires at least two values (base and exponent).");
+        return 0;
+    }
+    float $base = $input[0];
+    float $exponent = $input[1];
+    return pow($base, $exponent);
+}
+
+global proc float meanValues(float $input[])
+{
+    if (size($input) == 0) {
+        warning("No input values provided.");
+        return 0;
+    }
+    float $total = addValues($input);
+    return $total / size($input);
+}
+
+global proc float medianValues(float $input[])
+{
+    if (size($input) == 0) {
+        warning("No input values provided.");
+        return 0;
+    }
+
+    float $sorted[] = $input;
+    sort $sorted;
+
+    int $n = size($sorted);
+    if ($n % 2 == 1)
+    {
+        return $sorted[$n / 2];
+    }
+    else
+    {
+        return ($sorted[($n / 2) - 1] + $sorted[$n / 2]) / 2.0;
+    }
+}
+
+global proc testCalculator() {
+    float $numbers[] = {4.0, 2.0, 8.0, 6.0};
+    print("Sum: " + addValues($numbers) + "\n");
+    print("Difference: " + subtractValues($numbers) + "\n");
+    print("Multiplication: " + multiplyValues($numbers) + "\n");
+    print("Division: " + divideValues($numbers) + "\n");
+    print("Power (Takes the first two numbers): " + powerValues($numbers) + "\n");
+    print("Mean: " + meanValues($numbers) + "\n");
+    print("Median: " + medianValues($numbers) + "\n");
+}
+
+testCalculator();
