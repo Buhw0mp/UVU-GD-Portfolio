@@ -1,0 +1,77 @@
+// Random Duplicater Tool
+
+global proc randomDuplicater(int $count,
+                             float $minX, float $maxX,
+                             float $minY, float $maxY,
+                             float $minZ, float $maxZ)
+{
+    if ($count <= 0) {
+        warning("You need to put a number thats larger than 0.");
+        return;
+    }
+
+    string $sel[] = `ls -sl -long`;
+    if (!size($sel)) {
+        warning("You need to actually select something silly.");
+        return;
+    }
+
+    if ($minX > $maxX) { float $tmp = $minX; $minX = $maxX; $maxX = $tmp; }
+    if ($minY > $maxY) { float $tmp = $minY; $minY = $maxY; $maxY = $tmp; }
+    if ($minZ > $maxZ) { float $tmp = $minZ; $minZ = $maxZ; $maxZ = $tmp; }
+
+    int $selCount = size($sel);
+    for ($i = 0; $i < $selCount; $i++) {
+        string $src = $sel[$i];
+        for ($j = 0; $j < $count; $j++) {
+            string $dupes[] = `duplicate $src`;
+            string $new = $dupes[0];
+
+            float $randX = rand($minX, $maxX);
+            float $randY = rand($minY, $maxY);
+            float $randZ = rand($minZ, $maxZ);
+
+            move -ws $randX $randY $randZ $new;
+        }
+    }
+
+    print("Created " + ($selCount * $count) + " duplicates.\n");
+}
+
+global proc randomizeValues()
+{
+    int $count = `intField -q -value duplicatesField`;
+    float $minX = `floatFieldGrp -q -value1 xRange`;
+    float $maxX = `floatFieldGrp -q -value2 xRange`;
+    float $minY = `floatFieldGrp -q -value1 yRange`;
+    float $maxY = `floatFieldGrp -q -value2 yRange`;
+    float $minZ = `floatFieldGrp -q -value1 zRange`;
+    float $maxZ = `floatFieldGrp -q -value2 zRange`;
+
+    randomDuplicater($count, $minX, $maxX, $minY, $maxY, $minZ, $maxZ);
+}
+
+global proc randomizeUI()
+{
+    string $winName = "randomizeWindow";
+
+    if (`window -exists $winName`) {
+        deleteUI $winName;
+    }
+
+    window -title "Randomize Duplicater" -widthHeight 360 220 $winName;
+    columnLayout -adj true -columnAlign "center";
+
+    text -label "\nDuplicates per object:\n";
+    intField -value 10 -min 1 -max 9999 duplicatesField;
+    floatFieldGrp -numberOfFields 2 -label "X Range (min, max):" -value1 -10 -value2 10 xRange;
+    floatFieldGrp -numberOfFields 2 -label "Y Range (min, max):" -value1 0 -value2 10 yRange;
+    floatFieldGrp -numberOfFields 2 -label "Z Range (min, max):" -value1 -10 -value2 10 zRange;
+
+    button -label "Randomize" -command "randomizeValues();" -height 36;
+    button -label "Select Originals" -command "select -r `ls -sl -long`;" -height 36;
+
+    showWindow $winName;
+}
+
+randomizeUI();
