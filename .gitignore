@@ -131,7 +131,7 @@ DAGV1700/AdventureGame/UserSettings/Search.settings
 
 # Asset metadata
 [Aa]ssets[Aa]sset[Ss]tore
-[Aa]ssets[Ss]treamingAssets 
+[Aa]ssets[Ss]treamingAssets
 
 # Auto-generated Animation curves cache
 [Aa]ssets[Aa]nimations[Aa]nimations.asset
@@ -228,7 +228,7 @@ crashlytics-build.properties
 
 
 
-UnityProject/Assets/MayaProject/images/
+
 
 UnityProject/Assets/Brawl Arena/
 
@@ -240,12 +240,3 @@ UnityProject/Assets/Scripts/ArtisanDream2.Tools/
 
 UnityProject/Assets/MayaProject/movies/
 
-UnityProject/Assets/MayaProject/sourceimages/WallShackLampStorage/V3Storage/environment_Objects-1_lambert1_BaseColor_sRGB_ACEScg.png.tx
-
-UnityProject/Assets/MayaProject/sourceimages/WallShackLampStorage/V3Storage/environment_Objects-1_lambert1_Height_Raw_ACEScg.png.tx
-
-UnityProject/Assets/MayaProject/sourceimages/WallShackLampStorage/V3Storage/environment_Objects-1_lambert1_Metallic_Raw_ACEScg.png.tx
-
-UnityProject/Assets/MayaProject/sourceimages/WallShackLampStorage/V3Storage/environment_Objects-1_lambert1_Normal_Raw_ACEScg.png.tx
-
-UnityProject/Assets/MayaProject/sourceimages/WallShackLampStorage/V3Storage/environment_Objects-1_lambert1_Roughness_Raw_ACEScg.png.tx

@@ -28,3 +28,4 @@
 *.swatch filter=lfs diff=lfs merge=lfs -text
 *.tx filter=lfs diff=lfs merge=lfs -text
 *.sbsar filter=lfs diff=lfs merge=lfs -text
+*.txt filter=lfs diff=lfs merge=lfs -text
