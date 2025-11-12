@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 21667c5c1ee7a4111a1243f78270d1dd, type: 3}
-  m_Name: PlayerHealth
+  m_Name: EnemyHP_TypeA
   m_EditorClassIdentifier: 
-  value: 1
+  value: 100
   minValue: 0
-  maxValue: 1
+  maxValue: 100
   valueOutOfRange:
     m_PersistentCalls:
       m_Calls: []
@@ -24,9 +24,9 @@ MonoBehaviour:
   onValueZero:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 11400000, guid: d2633beaa2709f546be29e2af990f755, type: 2}
-        m_TargetAssemblyTypeName: GameAction, Assembly-CSharp
-        m_MethodName: Raise
+      - m_Target: {fileID: -3199326958444068472, guid: 7f7217dec82cd074e9d2b49dfbfd142b, type: 3}
+        m_TargetAssemblyTypeName: DestroyBehaviour, Assembly-CSharp
+        m_MethodName: DestroyObj
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
