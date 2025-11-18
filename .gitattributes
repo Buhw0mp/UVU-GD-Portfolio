@@ -29,3 +29,4 @@
 *.tx filter=lfs diff=lfs merge=lfs -text
 *.sbsar filter=lfs diff=lfs merge=lfs -text
 *.txt filter=lfs diff=lfs merge=lfs -text
+UnityProject/Assets/_Game/Scenes/ModelTesting/Lightmap-3_comp_dir.png filter=lfs diff=lfs merge=lfs -text
