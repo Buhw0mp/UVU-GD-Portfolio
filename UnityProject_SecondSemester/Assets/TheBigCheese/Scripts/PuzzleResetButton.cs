@@ -1,11 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TheBigCheese.Scripts;
 
 public class PuzzleResetButton : MonoBehaviour
 {
-    [Tooltip("Reference the LevelGenerator that created the grid")]
-    public LevelGenerator levelGenerator;
+    [Tooltip("Reference the GenerateLevel that created the grid")]
+    public GenerateLevel levelGenerator;
 
     // Call from a UI Button (OnClick) to regenerate the entire puzzle (new layout)
     public void ResetByRegenerating()
@@ -15,7 +16,7 @@ public class PuzzleResetButton : MonoBehaviour
             Debug.LogWarning("PuzzleResetButton: levelGenerator not assigned.");
             return;
         }
-        levelGenerator.GenerateLevel();
+        levelGenerator.Generate();
     }
 
     // Call from a UI Button (OnClick) to reset only rotations of existing tiles (keeps types/positions)

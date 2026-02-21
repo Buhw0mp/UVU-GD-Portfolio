@@ -131,7 +131,7 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 297798817540589422}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &98526294
+--- !u!114 &98526291
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -143,7 +143,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3ffaa95c186b7e41b5a9bb347c2720e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelGenerator: {fileID: 1148987966}
+  levelGenerator: {fileID: 1148987969}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -156,6 +156,7 @@ GameObject:
   - component: {fileID: 330585545}
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
+  - component: {fileID: 330585548}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -204,7 +205,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
+  field of view: 60.000004
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -230,8 +231,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.71762264, y: 0.00033630308, z: -0.00012447938, w: 0.6964321}
-  m_LocalPosition: {x: -1261.2651, y: 376.09192, z: -1230.7716}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1243.1787, y: 180, z: -1275.5056}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -281,6 +282,27 @@ MonoBehaviour:
     mipBias: 0
     varianceClampScale: 0.9
     contrastAdaptiveSharpening: 0
+--- !u!114 &330585548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b6f16a05f3b45deac3c09635e405988, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetGenerator: {fileID: 1148987969}
+  offset: {x: -10, y: 20, z: 10}
+  zoomSpeed: 50
+  rotateSpeed: 150
+  panSpeed: 100
+  panSmooth: 100
+  pitchSpeed: 150
+  minPitch: 10
+  maxPitch: 80
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -738,7 +760,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1148987967}
-  - component: {fileID: 1148987966}
+  - component: {fileID: 1148987969}
+  - component: {fileID: 1148987968}
   m_Layer: 0
   m_Name: LevelGenerator
   m_TagString: Untagged
@@ -746,35 +769,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1148987966
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1148987965}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c4d398114e2d43449bcfea3b345dbfa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  width: 20
-  height: 20
-  cellSize: 10
-  difficulty: 100
-  straightPrefab: {fileID: 6215058873424979988, guid: 9cbbb9149b9f4bc42b9145ac3e8f110d,
-    type: 3}
-  curvedPrefab: {fileID: 3320391249859710151, guid: 0abf89b7b85acc74bb1b40196c2c3b0c,
-    type: 3}
-  endPrefab: {fileID: 7363064423774962268, guid: 0f2e7af5730df3f49847deb90f4104f3,
-    type: 3}
-  crossPrefab: {fileID: 5345050984622275886, guid: 0363025ed42c8ad41be6a09be94b3a54,
-    type: 3}
-  emptyPrefab: {fileID: 7073676580104305731, guid: 85c4e945b4be5e94581b9c890c4e3f66,
-    type: 3}
-  emptyChance: 21
-  gridParent: {fileID: 1842692145}
-  autoGenerateOnStart: 1
 --- !u!4 &1148987967
 Transform:
   m_ObjectHideFlags: 0
@@ -790,6 +784,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1148987968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1148987965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5d24e532a4e494b8acc3eba63adf473, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  generator: {fileID: 1148987969}
+  checkDelaySeconds: 0.05
+--- !u!114 &1148987969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1148987965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c4d398114e2d43449bcfea3b345dbfa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  width: 4
+  height: 4
+  cellSize: 10
+  difficulty: 70
+  straightPrefab: {fileID: 6215058873424979988, guid: 9cbbb9149b9f4bc42b9145ac3e8f110d,
+    type: 3}
+  curvedPrefab: {fileID: 3320391249859710151, guid: 0abf89b7b85acc74bb1b40196c2c3b0c,
+    type: 3}
+  endPrefab: {fileID: 7363064423774962268, guid: 0f2e7af5730df3f49847deb90f4104f3,
+    type: 3}
+  crossPrefab: {fileID: 5345050984622275886, guid: 0363025ed42c8ad41be6a09be94b3a54,
+    type: 3}
+  emptyPrefab: {fileID: 7073676580104305731, guid: 85c4e945b4be5e94581b9c890c4e3f66,
+    type: 3}
+  emptyChance: 20
+  gridParent: {fileID: 1842692145}
+  autoGenerateOnStart: 1
+  levelData: {fileID: 11400000, guid: e5e49058de3cf584bbddb66588cab149, type: 2}
 --- !u!1 &1228730099
 GameObject:
   m_ObjectHideFlags: 0
@@ -1056,7 +1094,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 98526294}
+      objectReference: {fileID: 98526291}
     - target: {fileID: 7705452814347857431, guid: 0b0913692ea0e1d419d9afe5faae9248,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
@@ -1084,7 +1122,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5216799574734928509, guid: 0b0913692ea0e1d419d9afe5faae9248,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 98526294}
+      addedObject: {fileID: 98526291}
   m_SourcePrefab: {fileID: 100100000, guid: 0b0913692ea0e1d419d9afe5faae9248, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

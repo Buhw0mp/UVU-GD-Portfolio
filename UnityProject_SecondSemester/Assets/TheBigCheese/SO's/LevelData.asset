@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9d60a6abf9243b0aedb6cdd343c09ca, type: 3}
+  m_Name: LevelData
+  m_EditorClassIdentifier: 
+  width: 10
+  height: 10
+  cellSize: 10
+  difficulty: 70
+  emptyChance: 20
+  straightPrefab: {fileID: 6215058873424979988, guid: 9cbbb9149b9f4bc42b9145ac3e8f110d,
+    type: 3}
+  curvedPrefab: {fileID: 3320391249859710151, guid: 0abf89b7b85acc74bb1b40196c2c3b0c,
+    type: 3}
+  endPrefab: {fileID: 7363064423774962268, guid: 0f2e7af5730df3f49847deb90f4104f3,
+    type: 3}
+  crossPrefab: {fileID: 5345050984622275886, guid: 0363025ed42c8ad41be6a09be94b3a54,
+    type: 3}
+  emptyPrefab: {fileID: 7073676580104305731, guid: 85c4e945b4be5e94581b9c890c4e3f66,
+    type: 3}

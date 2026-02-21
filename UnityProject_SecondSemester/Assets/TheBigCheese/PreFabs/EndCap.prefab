@@ -218,7 +218,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5dc0c529d105f3744bd424262c5d14f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 2
+  type: 3
   rotationSteps: 0
 --- !u!114 &4943124956839871157
 MonoBehaviour:

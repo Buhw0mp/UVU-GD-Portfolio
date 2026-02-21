@@ -1,268 +1,352 @@
-
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
-public class LevelGenerator : MonoBehaviour
+namespace TheBigCheese.Scripts
 {
-    public int width = 6;
-    public int height = 6;
-    public float cellSize = 1f;
-
-    [Range(0,100)]
-    public int difficulty = 50;
-
-    public GameObject straightPrefab;
-    public GameObject curvedPrefab;
-    public GameObject endPrefab;
-    public GameObject crossPrefab;
-
-    // optional empty tile to mix things up
-    public GameObject emptyPrefab;
-    [Range(0,100)]
-    public int emptyChance = 15;
-
-    public Transform gridParent;
-    public bool autoGenerateOnStart = false; // default off
-
-    private PipeTile[,] gridTiles;
-
-    private void Start()
+    public class GenerateLevel : MonoBehaviour
     {
-        if (autoGenerateOnStart && Application.isPlaying)
-            GenerateLevel();
-    }
+        public int width = 6;
+        public int height = 6;
+        public float cellSize = 1f;
 
-    [ContextMenu("Generate Level")]
-    public void GenerateLevel()
-    {
-        if (!ValidateRequiredPrefabs())
+        [Range(0, 100)]
+        public int difficulty = 50;
+
+        public GameObject straightPrefab;
+        public GameObject curvedPrefab;
+        public GameObject endPrefab;
+        public GameObject crossPrefab;
+
+        // optional empty tile to mix things up
+        public GameObject emptyPrefab;
+        [Range(0, 100)]
+        public int emptyChance = 15;
+
+        public Transform gridParent;
+        public bool autoGenerateOnStart = false; // default off
+
+        // Optional ScriptableObject to centralize data/tuning
+        public LevelData levelData;
+
+        // event fired after grid is generated
+        public static event Action OnGridGenerated;
+
+        // exposed read-only state after generation
+        public Vector2Int StartCell { get; private set; }
+        public Vector2Int EndCell { get; private set; }
+        public PipeTile[,] GridTiles => gridTiles;
+
+        private PipeTile[,] gridTiles;
+
+        private void Start()
         {
-            Debug.LogWarning("LevelGenerator: missing required prefabs (straight/curved/end/cross). Aborting generation.");
-            return;
+            if (autoGenerateOnStart && Application.isPlaying)
+                Generate();
         }
 
-        if (gridParent == null) gridParent = this.transform;
-        ClearGrid();
-        gridTiles = new PipeTile[width, height];
-
-        Vector2Int start = new Vector2Int(0, Random.Range(0, height));
-        Vector2Int end = new Vector2Int(width - 1, Random.Range(0, height));
-
-        List<Vector2Int> path = CarvePath(start, end);
-        PlacePath(path, start, end);
-        FillRemainingBlocks();
-    }
-
-    private bool ValidateRequiredPrefabs()
-    {
-        bool ok = true;
-        if (straightPrefab == null) ok = false;
-        if (curvedPrefab == null) ok = false;
-        if (endPrefab == null) ok = false;
-        if (crossPrefab == null) ok = false;
-        return ok;
-    }
-
-    private void ClearGrid()
-    {
-        if (gridParent == null) return;
-        for (int i = gridParent.childCount - 1; i >= 0; i--)
+        [ContextMenu("Generate Level")]
+        public void Generate()
         {
-            var child = gridParent.GetChild(i).gameObject;
-            if (Application.isPlaying) Destroy(child);
-            else DestroyImmediate(child);
-        }
-    }
-
-    // carve a simple path in grid coordinates (x, y) where y maps to world z
-    private List<Vector2Int> CarvePath(Vector2Int start, Vector2Int end)
-    {
-        HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
-        List<Vector2Int> path = new List<Vector2Int> { start };
-        visited.Add(start);
-        Vector2Int current = start;
-        int attempts = 0;
-        while (current != end && attempts < width * height * 4)
-        {
-            attempts++;
-            List<Vector2Int> candidates = new List<Vector2Int>();
-            Vector2Int[] dirs = new[] { Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left };
-            foreach (var d in dirs)
+            // if a LevelData asset is assigned, copy values from it (data-driven)
+            if (levelData != null)
             {
-                Vector2Int n = current + d;
-                if (n.x >= 0 && n.x < width && n.y >= 0 && n.y < height && !visited.Contains(n))
-                    candidates.Add(n);
+                width = Mathf.Max(1, levelData.width);
+                height = Mathf.Max(1, levelData.height);
+                cellSize = Mathf.Max(0.01f, levelData.cellSize);
+                difficulty = Mathf.Clamp(levelData.difficulty, 0, 100);
+                emptyChance = Mathf.Clamp(levelData.emptyChance, 0, 100);
+
+                // assign prefabs from the data asset if not set locally
+                straightPrefab = straightPrefab ?? levelData.straightPrefab;
+                curvedPrefab = curvedPrefab ?? levelData.curvedPrefab;
+                endPrefab = endPrefab ?? levelData.endPrefab;
+                crossPrefab = crossPrefab ?? levelData.crossPrefab;
+                emptyPrefab = emptyPrefab ?? levelData.emptyPrefab;
             }
 
-            if (candidates.Count == 0) break;
-
-            candidates.Sort((a, b) =>
+            if (!ValidateRequiredPrefabs())
             {
-                int da = Mathf.Abs(a.x - end.x) + Mathf.Abs(a.y - end.y);
-                int db = Mathf.Abs(b.x - end.x) + Mathf.Abs(b.y - end.y);
-                return da.CompareTo(db);
-            });
+                Debug.LogWarning("GenerateLevel: missing required prefabs (straight/curved/end/cross). Aborting generation.");
+                return;
+            }
 
-            int pickIndex = 0;
-            int randChance = Random.Range(0, 100);
-            if (randChance < difficulty && candidates.Count > 1)
-                pickIndex = Random.Range(0, candidates.Count);
+            if (gridParent == null) gridParent = this.transform;
+            ClearGrid();
+            gridTiles = new PipeTile[width, height];
 
-            Vector2Int next = candidates[pickIndex];
-            visited.Add(next);
-            path.Add(next);
-            current = next;
+            Vector2Int start = new Vector2Int(0, Random.Range(0, height));
+            Vector2Int end = new Vector2Int(width - 1, Random.Range(0, height));
+
+            StartCell = start;
+            EndCell = end;
+
+            List<Vector2Int> path = CarvePath(start, end);
+            PlacePath(path, start, end);
+            FillRemainingBlocks();
+
+            // notify listeners that a new grid exists
+            OnGridGenerated?.Invoke();
+
+            // --- diagnostics: log the carved path and placed tiles ---
+            Debug.Log($"GenerateLevel: path length={path.Count}. Path: {string.Join(", ", path)}");
+            StartCoroutine(VisualizePlacedPath(path));
         }
 
-        if (current != end)
+        private IEnumerator<object> VisualizePlacedPath(List<Vector2Int> path)
         {
-            Vector2Int fallback = current;
-            while (fallback != end)
+            if (path == null || gridTiles == null) yield break;
+            var parent = new GameObject("GenPathMarkers");
+            parent.transform.SetParent(gridParent, false);
+            foreach (var cell in path)
             {
-                if (fallback.x < end.x) fallback.x++;
-                else if (fallback.x > end.x) fallback.x--;
-                else if (fallback.y < end.y) fallback.y++;
-                else if (fallback.y > end.y) fallback.y--;
-                if (!visited.Contains(fallback))
+                PipeTile t = null;
+                if (cell.x >= 0 && cell.x < gridTiles.GetLength(0) && cell.y >= 0 && cell.y < gridTiles.GetLength(1))
+                    t = gridTiles[cell.x, cell.y];
+
+                Debug.Log($"GenerateLevel: cell {cell} -> tile={(t == null ? "null" : t.type.ToString())} rot={(t == null ? "n/a" : t.rotationSteps.ToString())}");
+
+                var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                go.transform.localScale = Vector3.one * 0.2f;
+                go.transform.position = PositionForCell(cell) + Vector3.up * 0.25f;
+                var r = go.GetComponent<Renderer>();
+                r.material.color = Color.green;
+                go.transform.SetParent(parent.transform, true);
+            }
+
+            yield return new WaitForSeconds(2f);
+            if (parent != null) Destroy(parent);
+        }
+
+        private bool ValidateRequiredPrefabs()
+        {
+            bool ok = true;
+            if (straightPrefab == null) ok = false;
+            if (curvedPrefab == null) ok = false;
+            if (endPrefab == null) ok = false;
+            if (crossPrefab == null) ok = false;
+            return ok;
+        }
+
+        private void ClearGrid()
+        {
+            if (gridParent == null) return;
+            for (int i = gridParent.childCount - 1; i >= 0; i--)
+            {
+                var child = gridParent.GetChild(i).gameObject;
+                if (Application.isPlaying) Destroy(child);
+                else DestroyImmediate(child);
+            }
+        }
+
+        private List<Vector2Int> CarvePath(Vector2Int start, Vector2Int end)
+        {
+            HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
+            List<Vector2Int> path = new List<Vector2Int> { start };
+            visited.Add(start);
+            Vector2Int current = start;
+            int attempts = 0;
+            while (current != end && attempts < width * height * 4)
+            {
+                attempts++;
+                List<Vector2Int> candidates = new List<Vector2Int>();
+                Vector2Int[] dirs = new[] { Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left };
+                foreach (var d in dirs)
                 {
-                    path.Add(fallback);
-                    visited.Add(fallback);
+                    Vector2Int n = current + d;
+                    if (n.x >= 0 && n.x < width && n.y >= 0 && n.y < height && !visited.Contains(n))
+                        candidates.Add(n);
                 }
-                else break;
+
+                if (candidates.Count == 0) break;
+
+                candidates.Sort((a, b) =>
+                {
+                    int da = Mathf.Abs(a.x - end.x) + Mathf.Abs(a.y - end.y);
+                    int db = Mathf.Abs(b.x - end.x) + Mathf.Abs(b.y - end.y);
+                    return da.CompareTo(db);
+                });
+
+                int pickIndex = 0;
+                int randChance = Random.Range(0, 100);
+                if (randChance < difficulty && candidates.Count > 1)
+                    pickIndex = Random.Range(0, candidates.Count);
+
+                Vector2Int next = candidates[pickIndex];
+                visited.Add(next);
+                path.Add(next);
+                current = next;
             }
+
+            if (current != end)
+            {
+                Vector2Int fallback = current;
+                while (fallback != end)
+                {
+                    if (fallback.x < end.x) fallback.x++;
+                    else if (fallback.x > end.x) fallback.x--;
+                    else if (fallback.y < end.y) fallback.y++;
+                    else if (fallback.y > end.y) fallback.y--;
+                    if (!visited.Contains(fallback))
+                    {
+                        path.Add(fallback);
+                        visited.Add(fallback);
+                    }
+                    else break;
+                }
+            }
+
+            if (!path.Contains(end)) path.Add(end);
+            return path;
         }
 
-        if (!path.Contains(end)) path.Add(end);
-        return path;
-    }
-
-    private void PlacePath(List<Vector2Int> path, Vector2Int start, Vector2Int end)
-    {
-        for (int x = 0; x < width; x++)
-        for (int y = 0; y < height; y++)
+        private void PlacePath(List<Vector2Int> path, Vector2Int start, Vector2Int end)
         {
-            Vector2Int pos = new Vector2Int(x, y);
-            GameObject prefab = null;
-            PipeType type = PipeType.Straight;
-            int rot = 0;
+            var pathSet = new HashSet<Vector2Int>(path);
 
-            if (pos == start)
+            for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
             {
-                prefab = endPrefab;
-                Vector2Int next = path[Mathf.Min(1, path.Count - 1)];
-                Vector2Int dir = next - pos;
-                type = PipeType.End;
-                rot = DirectionToRotation(dir);
-            }
-            else if (pos == end)
-            {
-                prefab = endPrefab;
-                Vector2Int prev = path[path.Count - 2];
-                Vector2Int dir = prev - pos;
-                type = PipeType.End;
-                rot = DirectionToRotation(dir);
-            }
-            else if (path.Contains(pos))
-            {
-                int idx = path.IndexOf(pos);
-                Vector2Int prev = path[Mathf.Max(0, idx - 1)];
-                Vector2Int next = path[Mathf.Min(path.Count - 1, idx + 1)];
-                Vector2Int dirFrom = pos - prev;
-                Vector2Int dirTo = next - pos;
+                Vector2Int pos = new Vector2Int(x, y);
+                GameObject prefab = null;
+                PipeType type = PipeType.Straight;
+                int rot = 0;
 
-                if (dirFrom + dirTo == Vector2Int.zero)
+                if (pos == start || pos == end || pathSet.Contains(pos))
                 {
-                    prefab = straightPrefab;
-                    type = PipeType.Straight;
-                    // if direction along Z -> forward/back, else left/right
-                    if (dirTo == Vector2Int.up || dirTo == Vector2Int.down) rot = 0;
-                    else rot = 1;
-                }
-                else
-                {
-                    prefab = curvedPrefab;
-                    type = PipeType.Curved;
-                    rot = CurvedRotationFromDirs(dirFrom, dirTo);
-                }
-            }
+                    bool[] want = new bool[4];
+                    Vector2Int[] dirs = new[] { Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left };
+                    for (int i = 0; i < 4; i++)
+                    {
+                        var n = pos + dirs[i];
+                        if (pathSet.Contains(n)) want[i] = true;
+                    }
 
-            if (prefab != null)
-            {
-                var instance = Instantiate(prefab, PositionForCell(pos), Quaternion.identity, gridParent);
-                var tile = instance.GetComponent<PipeTile>();
-                if (tile != null)
-                {
-                    tile.SetTypeAndRotation(type, rot);
-                    gridTiles[x, y] = tile;
+                    int connections = 0;
+                    for (int i = 0; i < 4; i++) if (want[i]) connections++;
+
+                    if (connections == 0)
+                    {
+                        prefab = emptyPrefab ?? straightPrefab;
+                        type = PipeType.Empty;
+                        rot = 0;
+                    }
+                    else if (connections == 1)
+                    {
+                        prefab = endPrefab;
+                        type = PipeType.End;
+                        for (int i = 0; i < 4; i++) if (want[i]) { rot = i; break; }
+                    }
+                    else if (connections == 2)
+                    {
+                        bool opposite = (want[0] && want[2]) || (want[1] && want[3]);
+                        if (opposite)
+                        {
+                            prefab = straightPrefab;
+                            type = PipeType.Straight;
+                            if (want[0] && want[2]) rot = 1; else rot = 0;
+                        }
+                        else
+                        {
+                            prefab = curvedPrefab;
+                            type = PipeType.Curved;
+                            if (want[0] && want[1]) rot = 0;
+                            else if (want[1] && want[2]) rot = 1;
+                            else if (want[2] && want[3]) rot = 2;
+                            else if (want[3] && want[0]) rot = 3;
+                            else rot = 0;
+                        }
+                    }
+                    else if (connections == 3)
+                    {
+                        prefab = crossPrefab ?? straightPrefab;
+                        type = PipeType.Cross;
+                        rot = 0;
+                    }
+                    else
+                    {
+                        prefab = crossPrefab ?? straightPrefab;
+                        type = PipeType.Cross;
+                        rot = 0;
+                    }
+
+                    if (prefab != null)
+                    {
+                        var instance = Instantiate(prefab, PositionForCell(pos), Quaternion.identity, gridParent);
+                        var tile = instance.GetComponent<PipeTile>();
+                        if (tile != null)
+                        {
+                            tile.SetTypeAndRotation(type, rot);
+                            gridTiles[x, y] = tile;
+                        }
+                    }
                 }
             }
         }
-    }
 
-    private void FillRemainingBlocks()
-    {
-        for (int x = 0; x < width; x++)
-        for (int y = 0; y < height; y++)
+        private void FillRemainingBlocks()
         {
-            if (gridTiles[x, y] != null) continue;
-            Vector2Int pos = new Vector2Int(x, y);
-
-            int r = Random.Range(0, 100);
-
-            // empty tile chance has priority if assigned
-            if (emptyPrefab != null && r < emptyChance)
+            for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
             {
-                var instance = Instantiate(emptyPrefab, PositionForCell(pos), Quaternion.identity, gridParent);
-                var tile = instance.GetComponent<PipeTile>();
-                if (tile != null)
+                if (gridTiles[x, y] != null) continue;
+                Vector2Int pos = new Vector2Int(x, y);
+
+                int r = Random.Range(0, 100);
+
+                if (emptyPrefab != null && r < emptyChance)
                 {
-                    tile.SetTypeAndRotation(PipeType.Empty, 0);
-                    gridTiles[x, y] = tile;
+                    var instance = Instantiate(emptyPrefab, PositionForCell(pos), Quaternion.identity, gridParent);
+                    var tile = instance.GetComponent<PipeTile>();
+                    if (tile != null)
+                    {
+                        tile.SetTypeAndRotation(PipeType.Empty, 0);
+                        gridTiles[x, y] = tile;
+                    }
+                    continue;
                 }
-                continue;
-            }
 
-            // otherwise choose other types
-            GameObject prefab;
-            PipeType type;
-            int roll = Random.Range(0, 100);
-            if (roll < 10) { prefab = crossPrefab; type = PipeType.Cross; }
-            else if (roll < 45) { prefab = curvedPrefab; type = PipeType.Curved; }
-            else { prefab = straightPrefab; type = PipeType.Straight; }
+                GameObject prefab;
+                PipeType type;
+                int roll = Random.Range(0, 100);
+                if (roll < 10) { prefab = crossPrefab; type = PipeType.Cross; }
+                else if (roll < 45) { prefab = curvedPrefab; type = PipeType.Curved; }
+                else { prefab = straightPrefab; type = PipeType.Straight; }
 
-            int rot = Random.Range(0, 4);
-            var inst = Instantiate(prefab, PositionForCell(pos), Quaternion.identity, gridParent);
-            var t = inst.GetComponent<PipeTile>();
-            if (t != null)
-            {
-                t.SetTypeAndRotation(type, rot);
-                gridTiles[x, y] = t;
+                int rot = Random.Range(0, 4);
+                var inst = Instantiate(prefab, PositionForCell(pos), Quaternion.identity, gridParent);
+                var t = inst.GetComponent<PipeTile>();
+                if (t != null)
+                {
+                    t.SetTypeAndRotation(type, rot);
+                    gridTiles[x, y] = t;
+                }
             }
         }
-    }
 
-    private Vector3 PositionForCell(Vector2Int cell)
-    {
-        // x -> world x, y -> world z; Y is 0 (flat grid)
-        return new Vector3(cell.x * cellSize, 0f, cell.y * cellSize) + transform.position;
-    }
+        private Vector3 PositionForCell(Vector2Int cell)
+        {
+            return new Vector3(cell.x * cellSize, 0f, cell.y * cellSize) + transform.position;
+        }
 
-    private int DirectionToRotation(Vector2Int dir)
-    {
-        if (dir == Vector2Int.up) return 0;
-        if (dir == Vector2Int.right) return 1;
-        if (dir == Vector2Int.down) return 2;
-        return 3;
-    }
+        private int DirectionToRotation(Vector2Int dir)
+        {
+            if (dir == Vector2Int.up) return 0;
+            if (dir == Vector2Int.right) return 1;
+            if (dir == Vector2Int.down) return 2;
+            return 3;
+        }
 
-    private int CurvedRotationFromDirs(Vector2Int from, Vector2Int to)
-    {
-        Vector2Int a = from;
-        Vector2Int b = to;
-        if ((a == Vector2Int.up && b == Vector2Int.right) || (a == Vector2Int.right && b == Vector2Int.up)) return 0;
-        if ((a == Vector2Int.right && b == Vector2Int.down) || (a == Vector2Int.down && b == Vector2Int.right)) return 1;
-        if ((a == Vector2Int.down && b == Vector2Int.left) || (a == Vector2Int.left && b == Vector2Int.down)) return 2;
-        if ((a == Vector2Int.left && b == Vector2Int.up) || (a == Vector2Int.up && b == Vector2Int.left)) return 3;
-        return 0;
+        private int CurvedRotationFromDirs(Vector2Int from, Vector2Int to)
+        {
+            Vector2Int a = from;
+            Vector2Int b = to;
+            if ((a == Vector2Int.up && b == Vector2Int.right) || (a == Vector2Int.right && b == Vector2Int.up)) return 0;
+            if ((a == Vector2Int.right && b == Vector2Int.down) || (a == Vector2Int.down && b == Vector2Int.right)) return 1;
+            if ((a == Vector2Int.down && b == Vector2Int.left) || (a == Vector2Int.left && b == Vector2Int.down)) return 2;
+            if ((a == Vector2Int.left && b == Vector2Int.up) || (a == Vector2Int.up && b == Vector2Int.left)) return 3;
+            return 0;
+        }
     }
 }

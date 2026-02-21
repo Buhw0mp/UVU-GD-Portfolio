@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,6 +11,9 @@ public class PipeTile : MonoBehaviour
     [Range(0,3)]
     public int rotationSteps = 0; // 0..3, each step = 90deg clockwise around Y
 
+    // fired when rotation or type changes (useful for validation)
+    public event Action OnTileChanged;
+
     private void Awake()
     {
         ApplyRotationVisual();
@@ -20,12 +24,14 @@ public class PipeTile : MonoBehaviour
         type = t;
         rotationSteps = ((rot % 4) + 4) % 4;
         ApplyRotationVisual();
+        OnTileChanged?.Invoke();
     }
 
     public void RotateClockwise()
     {
         rotationSteps = (rotationSteps + 1) % 4;
         ApplyRotationVisual();
+        OnTileChanged?.Invoke();
     }
 
     private void ApplyRotationVisual()
@@ -53,6 +59,9 @@ public class PipeTile : MonoBehaviour
                 break;
             case PipeType.Cross:
                 baseConn = new[] { true, true, true, true };
+                break;
+            case PipeType.Empty:
+                baseConn = new[] { false, false, false, false };
                 break;
         }
 
