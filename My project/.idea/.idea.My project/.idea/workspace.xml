@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e3d1e8f8-fad9-4234-9ff1-f7f320aacf9c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../UnityProject_SecondSemester/Assets/SecondSem_MayaProj/scenes/Modleing/HumanCage_iswearitsnormal.ma" beforeDir="false" afterPath="$PROJECT_DIR$/../UnityProject_SecondSemester/Assets/SecondSem_MayaProj/scenes/Modleing/HumanCage_iswearitsnormal.ma" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.My project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.My project/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Assets/Scripts/PlayerControls.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Assets/Scripts/PlayerControls.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,7 +94,8 @@
       <updated>1773914415413</updated>
       <workItem from="1773914416886" duration="916000" />
       <workItem from="1774500091612" duration="2751000" />
-      <workItem from="1774671913422" duration="431000" />
+      <workItem from="1774671913422" duration="2168000" />
+      <workItem from="1774760930778" duration="4269000" />
     </task>
     <servers />
   </component>

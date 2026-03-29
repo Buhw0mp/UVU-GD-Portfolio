@@ -1,123 +1,186 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerControls : MonoBehaviour
+namespace Assets.Scripts
 {
-    [SerializeField] CharacterController controller;
-    [SerializeField] Vector3 playerVelocity;
-    [SerializeField] bool groundedPlayer;
-    [SerializeField] float playerSpeed;
-    [SerializeField] float gravityValue;
-    [SerializeField] GameObject activeChar;
-    [SerializeField] float moveHorizontal;
-    [SerializeField] float moveVertical;
-    [SerializeField] float speed = 4;
-    [SerializeField] float rotateSpeed = 4;
-    [SerializeField] float jumpHeight = 1.2f;
-    [SerializeField] bool isJumping;
-
-    // cached animator to avoid repeated GetComponent calls
-    Animator cachedAnimator;
-    [Header("Input")]
-    [SerializeField, Tooltip("Optional: make movement relative to this transform (e.g. the camera). If null, movement is world-relative.")]
-    Transform playerInputSpace;
-
-    void Start()
+    // Rigidbody-based player controller with camera rotation and jump physics.
+    public class PlayerControls : MonoBehaviour
     {
-        playerSpeed = 4;
-        gravityValue = -20;
+        [Header("Camera Rotation")]
+        public float mouseSensitivity = 2f;
+        private float verticalRotation = 0f;
+        private Transform cameraTransform;
 
-        if (activeChar != null)
-            cachedAnimator = activeChar.GetComponent<Animator>();
-    }
+        [Header("Ground Movement")]
+        private Rigidbody rb;
+        public float MoveSpeed = 5f;
+        private float moveHorizontal;
+        private float moveForward;
 
+        [Header("Jumping")]
+        public float jumpForce = 10f;
+        public float fallMultiplier = 2.5f; // Multiplies gravity when falling down
+        public float ascendMultiplier = 2f; // Multiplies gravity for ascending to peak of jump
+        private bool isGrounded = true;
+        public LayerMask groundLayer;
+        private float groundCheckTimer = 0f;
+        private float groundCheckDelay = 0.3f;
+        private float playerHeight;
+        private float raycastDistance;
 
-    void Update()
-    {
-        groundedPlayer = controller.isGrounded;
-        if (groundedPlayer && playerVelocity.y < 0)
+        void Start()
         {
-            playerVelocity.y = 0f;
-            // landed => not jumping anymore
-            isJumping = false;
-        }
-
-        // Read input from the new Input System: prefer gamepad if present, otherwise keyboard
-        float horizontalInput = 0f;
-        float verticalInput = 0f;
-        bool jumpPressed = false;
-
-        if (Gamepad.current != null)
-        {
-            Vector2 left = Gamepad.current.leftStick.ReadValue();
-            horizontalInput = left.x;
-            verticalInput = left.y;
-            jumpPressed = Gamepad.current.buttonSouth.wasPressedThisFrame;
-        }
-        else if (Keyboard.current != null)
-        {
-            // WASD / Arrow keys
-            horizontalInput = (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed ? 1f : 0f)
-                            - (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed ? 1f : 0f);
-            verticalInput = (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed ? 1f : 0f)
-                          - (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed ? 1f : 0f);
-            jumpPressed = Keyboard.current.spaceKey.wasPressedThisFrame;
-        }
-
-        // Movement: compute world-space desired velocity. If a playerInputSpace is assigned (usually the camera),
-        // make movement relative to that transform's XZ plane. Otherwise use world-space axes.
-        Vector3 desiredVelocity;
-        if (playerInputSpace != null)
-        {
-            Vector3 forward = playerInputSpace.forward;
-            forward.y = 0f;
-            forward.Normalize();
-            Vector3 right = playerInputSpace.right;
-            right.y = 0f;
-            right.Normalize();
-            Vector3 move = forward * verticalInput + right * horizontalInput;
-            desiredVelocity = move * speed;
-        }
-        else
-        {
-            Vector3 forward = transform.TransformDirection(Vector3.forward);
-            float curSpeed = speed * verticalInput;
-            desiredVelocity = forward * curSpeed + transform.TransformDirection(Vector3.right) * (speed * horizontalInput);
-        }
-
-        // Apply horizontal movement via SimpleMove (it applies gravity automatically for CharacterController)
-        controller.SimpleMove(desiredVelocity);
-
-        if (jumpPressed && groundedPlayer)
-        {
-            isJumping = true;
-            if (cachedAnimator != null) cachedAnimator.Play("Jump");
-            // Use physics eqn to compute initial jump velocity for desired height
-            playerVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
-        }
-
-        playerVelocity.y += gravityValue * Time.deltaTime;
-        controller.Move(playerVelocity * Time.deltaTime);
-
-        // Determine whether player is moving (use input we read above)
-        bool isMoving = Mathf.Abs(horizontalInput) > 0.01f || Mathf.Abs(verticalInput) > 0.01f;
-        this.gameObject.GetComponent<CharacterController>().minMoveDistance = isMoving ? 0.001f : 0.901f;
-        if (!isJumping)
-        {
-            if (cachedAnimator != null)
+            rb = GetComponent<Rigidbody>();
+            if (rb == null)
             {
-                if (isMoving) cachedAnimator.Play("Standard Run");
-                else cachedAnimator.Play("Idle");
+                Debug.LogError("PlayerControls requires a Rigidbody on the same GameObject.");
+                enabled = false;
+                return;
+            }
+            rb.freezeRotation = true;
+
+            cameraTransform = Camera.main != null ? Camera.main.transform : null;
+            if (cameraTransform == null)
+                Debug.LogWarning("No main camera found. Camera rotation will be skipped.");
+
+            // Compute player height from CapsuleCollider if present
+            CapsuleCollider capsule = GetComponent<CapsuleCollider>();
+            if (capsule != null)
+            {
+                playerHeight = capsule.height * transform.localScale.y;
+            }
+            else
+            {
+                // fallback estimate
+                playerHeight = 2f * transform.localScale.y;
+            }
+            raycastDistance = (playerHeight / 2f) + 0.2f;
+
+            // Hides the mouse
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+        void Update()
+        {
+            // Read input using the new Input System only (Keyboard / Mouse / Gamepad)
+
+            // Movement from gamepad or keyboard
+            if (Gamepad.current != null)
+            {
+                Vector2 left = Gamepad.current.leftStick.ReadValue();
+                moveHorizontal = left.x;
+                moveForward = left.y;
+            }
+            else if (Keyboard.current != null)
+            {
+                moveHorizontal = (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed ? 1f : 0f)
+                               - (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed ? 1f : 0f);
+                moveForward = (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed ? 1f : 0f)
+                             - (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed ? 1f : 0f);
+            }
+            else
+            {
+                moveHorizontal = 0f;
+                moveForward = 0f;
+            }
+
+            // Mouse / look
+            if (cameraTransform != null && Mouse.current != null)
+            {
+                Vector2 delta = Mouse.current.delta.ReadValue();
+                RotateCameraFromDelta(delta);
+            }
+
+            // Jump
+            bool jumpPressed = false;
+            if (Gamepad.current != null)
+                jumpPressed = Gamepad.current.buttonSouth.wasPressedThisFrame;
+            else if (Keyboard.current != null)
+                jumpPressed = Keyboard.current.spaceKey.wasPressedThisFrame;
+
+            if (jumpPressed && isGrounded)
+            {
+                Jump();
+            }
+
+            // Checking when we're on the ground and keeping track of our ground check delay
+            if (!isGrounded && groundCheckTimer <= 0f)
+            {
+                Vector3 rayOrigin = transform.position + Vector3.up * 0.1f;
+                isGrounded = Physics.Raycast(rayOrigin, Vector3.down, raycastDistance, groundLayer);
+            }
+            else
+            {
+                groundCheckTimer -= Time.deltaTime;
             }
         }
 
-        // Rotate character to face movement direction when moving
-        Vector3 horizontalVelocity = desiredVelocity;
-        horizontalVelocity.y = 0f;
-        if (horizontalVelocity.sqrMagnitude > 0.001f)
+        void FixedUpdate()
         {
-            Quaternion targetRot = Quaternion.LookRotation(horizontalVelocity);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, rotateSpeed * Time.deltaTime * 100f);
+            MovePlayer();
+            ApplyJumpPhysics();
+        }
+
+        void MovePlayer()
+        {
+            Vector3 movement = (transform.right * moveHorizontal + transform.forward * moveForward).normalized;
+            Vector3 targetVelocity = movement * MoveSpeed;
+
+            // Apply movement to the Rigidbody: preserve current Y velocity
+            Vector3 linearVel = rb.linearVelocity; // use new API
+            linearVel.x = targetVelocity.x;
+            linearVel.z = targetVelocity.z;
+            rb.linearVelocity = linearVel;
+
+            // If we aren't moving and are on the ground, stop lateral velocity so we don't slide
+            if (isGrounded && Mathf.Approximately(moveHorizontal, 0f) && Mathf.Approximately(moveForward, 0f))
+            {
+                rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+            }
+        }
+
+        void RotateCameraFromDelta(Vector2 mouseDelta)
+        {
+            if (cameraTransform == null) return;
+
+            // mouseDelta for the new input system is in pixels since last frame; for legacy Input it's axis-based.
+            float horizontalRotation = mouseDelta.x * mouseSensitivity;
+            transform.Rotate(0f, horizontalRotation, 0f);
+
+            verticalRotation -= mouseDelta.y * mouseSensitivity;
+            verticalRotation = Mathf.Clamp(verticalRotation, -90f, 90f);
+
+            cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
+        }
+
+        void Jump()
+        {
+            isGrounded = false;
+            groundCheckTimer = groundCheckDelay;
+            Vector3 v = rb.linearVelocity;
+            v.y = jumpForce;
+            rb.linearVelocity = v; // Initial burst for the jump
+        }
+
+        void ApplyJumpPhysics()
+        {
+            // Apply custom gravity modifiers to make jump feel better
+            Vector3 lv = rb.linearVelocity;
+            if (lv.y < 0f)
+            {
+                // Falling: Apply fall multiplier to make descent faster
+                float delta = Physics.gravity.y * fallMultiplier * Time.fixedDeltaTime;
+                lv.y += delta;
+                rb.linearVelocity = lv;
+            }
+            else if (lv.y > 0f)
+            {
+                // Rising: Change multiplier to make player reach peak of jump faster
+                float delta = Physics.gravity.y * ascendMultiplier * Time.fixedDeltaTime;
+                lv.y += delta;
+                rb.linearVelocity = lv;
+            }
         }
     }
 }
