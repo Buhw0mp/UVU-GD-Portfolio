@@ -128,10 +128,10 @@ namespace Assets.Scripts
             Vector3 targetVelocity = movement * MoveSpeed;
 
             // Apply movement to the Rigidbody: preserve current Y velocity
-            Vector3 linearVel = rb.linearVelocity; // use new API
-            linearVel.x = targetVelocity.x;
-            linearVel.z = targetVelocity.z;
-            rb.linearVelocity = linearVel;
+            Vector3 vel = rb.linearVelocity;
+            vel.x = targetVelocity.x;
+            vel.z = targetVelocity.z;
+            rb.linearVelocity = vel;
 
             // If we aren't moving and are on the ground, stop lateral velocity so we don't slide
             if (isGrounded && Mathf.Approximately(moveHorizontal, 0f) && Mathf.Approximately(moveForward, 0f))

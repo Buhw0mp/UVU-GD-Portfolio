@@ -7,6 +7,9 @@
     <list default="true" id="e3d1e8f8-fad9-4234-9ff1-f7f320aacf9c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.My project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.My project/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Assets/Scripts/PlayerControls.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Assets/Scripts/PlayerControls.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Assets/Scripts/SceneLoader.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Assets/Scripts/SceneLoader.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../UnityProject_SecondSemester/Assets/SecondSem_MayaProj/scenes/Modleing/HumanCage_iswearitsnormal.ma" beforeDir="false" afterPath="$PROJECT_DIR$/../UnityProject_SecondSemester/Assets/SecondSem_MayaProj/scenes/Modleing/HumanCage_iswearitsnormal.ma" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,7 +98,8 @@
       <workItem from="1773914416886" duration="916000" />
       <workItem from="1774500091612" duration="2751000" />
       <workItem from="1774671913422" duration="2168000" />
-      <workItem from="1774760930778" duration="4269000" />
+      <workItem from="1774760930778" duration="5688000" />
+      <workItem from="1774850181534" duration="4600000" />
     </task>
     <servers />
   </component>
