@@ -1,94 +1,94 @@
+
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 namespace Assets.Scripts
 {
-    /// <summary>
-    /// Show a prompt when the player is close enough and looking at this object (the door).
-    /// Uses the new Input System. When the interaction key is pressed the public
-    /// <see cref="onInteract"/> UnityEvent is invoked so a separate script can handle scene switching.
-    /// </summary>
     [RequireComponent(typeof(Collider))]
     public class DoorTrigger : MonoBehaviour
     {
         [Header("Interaction")]
-        [Tooltip("Maximum distance from the camera to allow interaction.")]
-        [SerializeField]
-        float interactRange = 3f;
-
-        [Tooltip("Dot threshold between camera forward and direction-to-door. 1 = exact center.")]
-        [SerializeField, Range(0.7f, 1f)]
-        float minDot = 0.95f; // ~18 degrees
-
-        [Tooltip("Layer mask used for obstruction checks (raycast). Include layers that can block view.")]
-        [SerializeField]
-        LayerMask obstructionMask = ~0;
-
-        [Tooltip("Optional UI GameObject (e.g. a Canvas child) to enable when looking at the door.")]
-        [SerializeField]
-        GameObject promptUI;
-
-        [Tooltip("UnityEvent invoked when the player interacts (presses E / gamepad South) while looking at the door).")]
+        [SerializeField] float interactRange = 3f;
+        [SerializeField, Range(0.7f, 1f)] float minDot = 0.95f;
+        [SerializeField] LayerMask obstructionMask = ~0;
+        [SerializeField] GameObject promptUI;
         public UnityEvent onInteract;
+
+        [Header("Debug")]
+        [SerializeField] bool enableDebugLogs = true;
+        [SerializeField] bool showGizmos = true;
 
         Camera mainCamera;
         Collider doorCollider;
         bool promptVisible;
+        CanvasGroup promptCanvasGroup;
 
         void Awake()
         {
             mainCamera = Camera.main;
-            if (mainCamera == null)
-            {
-                Debug.LogWarning("DoorTrigger: No Camera tagged as MainCamera found. Interaction will use Camera.main at runtime.");
-            }
-
             doorCollider = GetComponent<Collider>();
-            if (!doorCollider.isTrigger)
-            {
-                // It's fine if it's not trigger; we just need a collider to match raycasts.
-            }
 
-            if (promptUI != null)
-                promptUI.SetActive(false);
+            if (promptUI == null)
+            {
+                DWarn($"DoorTrigger ({name}) Awake: promptUI is not assigned.");
+            }
+            else
+            {
+                promptUI.SetActive(true);
+                promptCanvasGroup = promptUI.GetComponent<CanvasGroup>();
+                if (promptCanvasGroup == null)
+                    promptCanvasGroup = promptUI.AddComponent<CanvasGroup>();
+
+                promptCanvasGroup.alpha = 0f;
+                promptCanvasGroup.interactable = false;
+                promptCanvasGroup.blocksRaycasts = false;
+
+                string parentInfo = promptUI.transform.parent != null ? $"parent={promptUI.transform.parent.name}, parentActiveSelf={promptUI.transform.parent.gameObject.activeSelf}" : "no parent";
+                DLog($"DoorTrigger ({name}) Awake: promptUI assigned=true, promptUI.activeInHierarchy={promptUI.activeInHierarchy}, {parentInfo}, doorCollider.isTrigger={doorCollider.isTrigger}");
+            }
         }
 
         void Update()
         {
             Camera cam = mainCamera ?? Camera.main;
             if (cam == null)
-                return; // nothing we can do
+            {
+                DWarn($"DoorTrigger ({name}): no MainCamera available.");
+                return;
+            }
 
             Vector3 camPos = cam.transform.position;
             Vector3 camForward = cam.transform.forward;
 
-            // Distance check
             float dist = Vector3.Distance(camPos, transform.position);
+            // only log when it would change visibility (avoid spamming every frame)
             if (dist > interactRange)
             {
+                if (promptVisible) DLog($"DoorTrigger ({name}): out of range (dist={dist:F2}, range={interactRange})");
                 SetPromptVisible(false);
                 return;
             }
 
-            // Direction & angle check
             Vector3 toDoor = (transform.position - camPos).normalized;
             float dot = Vector3.Dot(camForward, toDoor);
             if (dot < minDot)
             {
+                if (promptVisible) DLog($"DoorTrigger ({name}): angle too wide (dot={dot:F2}, minDot={minDot})");
                 SetPromptVisible(false);
                 return;
             }
 
-            // Obstruction check: raycast from camera to the door and make sure the first hit is this door (or a child)
             RaycastHit hit;
             float maxDistance = Mathf.Min(interactRange, Vector3.Distance(camPos, transform.position));
-            bool obstructed = true;
-            if (Physics.Raycast(camPos, toDoor, out hit, maxDistance, obstructionMask))
+            bool obstructed = false;
+            if (Physics.Raycast(camPos, toDoor, out hit, maxDistance, obstructionMask, QueryTriggerInteraction.Collide))
             {
-                // Allow hit if it's this object or a child of this object
-                if (hit.collider != null && (hit.collider == doorCollider || hit.collider.transform.IsChildOf(transform)))
-                    obstructed = false;
+                if (hit.collider != null && !(hit.collider == doorCollider || hit.collider.transform.IsChildOf(transform)))
+                {
+                    obstructed = true;
+                    if (promptVisible) DLog($"DoorTrigger ({name}): obstructed by {hit.collider.name} at distance {hit.distance:F2}");
+                }
             }
 
             if (obstructed)
@@ -97,23 +97,46 @@ namespace Assets.Scripts
                 return;
             }
 
-            // At this point the player is within range, looking at the door and there's no obstruction
+            // only log when becoming visible (prevent repeated "Visible check passed" spam)
+            if (!promptVisible) DLog($"DoorTrigger ({name}): Visible check passed (dist={dist:F2}, dot={dot:F2}). Showing prompt.");
             SetPromptVisible(true);
 
-            // Check for interaction input using the new Input System
             bool interactPressed = false;
+
+            // Keyboard via the new Input System
             if (Keyboard.current != null)
+            {
                 interactPressed |= Keyboard.current.eKey.wasPressedThisFrame;
+            }
+            else
+            {
+#if ENABLE_LEGACY_INPUT_MANAGER
+                interactPressed |= UnityEngine.Input.GetKeyDown(KeyCode.E);
+#else
+                if (enableDebugLogs) DWarn($"DoorTrigger ({name}): Keyboard.current is null and Legacy Input Manager is disabled.");
+#endif
+            }
+
+            // Gamepad via the new Input System
             if (Gamepad.current != null)
-                interactPressed |= Gamepad.current.buttonSouth.wasPressedThisFrame; // usually A / Cross
+            {
+                interactPressed |= Gamepad.current.buttonSouth.wasPressedThisFrame;
+            }
+            else
+            {
+#if ENABLE_LEGACY_INPUT_MANAGER
+                interactPressed |= UnityEngine.Input.GetKeyDown(KeyCode.JoystickButton0);
+                interactPressed |= UnityEngine.Input.GetButtonDown("Submit");
+#else
+                // no-op
+#endif
+            }
 
             if (interactPressed)
             {
-                // Invoke the public event so another script can handle the scene change.
-                if (onInteract != null)
-                    onInteract.Invoke();
-                else
-                    Debug.Log("DoorTrigger: Interacted but no listeners on onInteract.");
+                DLog($"DoorTrigger ({name}): interaction input detected");
+                if (onInteract != null) onInteract.Invoke();
+                else DLog($"DoorTrigger ({name}): no listeners on onInteract.");
             }
         }
 
@@ -121,10 +144,64 @@ namespace Assets.Scripts
         {
             if (promptVisible == visible) return;
             promptVisible = visible;
-            if (promptUI != null)
+
+            if (promptUI == null)
+            {
+                DWarn($"DoorTrigger ({name}): cannot change visibility - promptUI is null.");
+                return;
+            }
+
+            if (promptCanvasGroup != null)
+            {
+                promptCanvasGroup.alpha = visible ? 1f : 0f;
+                promptCanvasGroup.interactable = visible;
+                promptCanvasGroup.blocksRaycasts = visible;
+                if (!promptUI.activeInHierarchy && visible)
+                {
+                    var parent = promptUI.transform.parent;
+                    string parentInfo = parent != null ? $"parent={parent.name}, parentActiveSelf={parent.gameObject.activeSelf}" : "no parent";
+                    DLog($"DoorTrigger ({name}): promptUI not active in hierarchy despite enabling CanvasGroup. {parentInfo}");
+                }
+            }
+            else
+            {
                 promptUI.SetActive(visible);
-            else if (visible)
-                Debug.Log("Press E to interact");
+                if (visible && !promptUI.activeInHierarchy)
+                {
+                    var parent = promptUI.transform.parent;
+                    string parentInfo = parent != null ? $"parent={parent.name}, parentActiveSelf={parent.gameObject.activeSelf}" : "no parent";
+                    DLog($"DoorTrigger ({name}): promptUI.SetActive(true) did not make it active in hierarchy. {parentInfo}");
+                }
+            }
+
+            DLog($"DoorTrigger ({name}): promptUI visibility set to {visible} (activeInHierarchy={promptUI.activeInHierarchy})");
+        }
+
+        void OnDrawGizmosSelected()
+        {
+            if (!showGizmos) return;
+
+            Camera cam = mainCamera ?? Camera.main;
+            if (cam == null) return;
+
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, 0.1f);
+
+            Vector3 camPos = cam.transform.position;
+            Vector3 toDoor = (transform.position - camPos).normalized;
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(camPos, camPos + toDoor * Mathf.Min(interactRange, Vector3.Distance(camPos, transform.position)));
+        }
+
+        // small helpers to respect the enableDebugLogs toggle
+        void DLog(string message)
+        {
+            if (enableDebugLogs) Debug.Log(message);
+        }
+
+        void DWarn(string message)
+        {
+            if (enableDebugLogs) Debug.LogWarning(message);
         }
     }
 }

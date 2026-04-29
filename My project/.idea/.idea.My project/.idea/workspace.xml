@@ -6,9 +6,16 @@
   <component name="ChangeListManager">
     <list default="true" id="e3d1e8f8-fad9-4234-9ff1-f7f320aacf9c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.My project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.My project/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Assets/Scripts/DoorTrigger.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Assets/Scripts/DoorTrigger.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Assets/Scripts/PlayerControls.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Assets/Scripts/PlayerControls.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Settings/PC_Renderer.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Settings/PC_Renderer.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Settings/SampleSceneProfile.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Settings/SampleSceneProfile.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../UnityProject_SecondSemester/Assets/Houdini_SecondSemester/Terrain04.hipnc" beforeDir="false" afterPath="$PROJECT_DIR$/../UnityProject_SecondSemester/Assets/Houdini_SecondSemester/Terrain04.hipnc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../UnityProject_SecondSemester/Assets/SecondSem_MayaProj/scenes/Modleing/CatMesh.ma" beforeDir="false" afterPath="$PROJECT_DIR$/../UnityProject_SecondSemester/Assets/SecondSem_MayaProj/scenes/Modleing/CatMesh.ma" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../UnityProject_SecondSemester/Assets/SecondSem_MayaProj/scenes/Modleing/LowPolyBoot.ma" beforeDir="false" afterPath="$PROJECT_DIR$/../UnityProject_SecondSemester/Assets/SecondSem_MayaProj/scenes/Modleing/LowPolyBoot.ma" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,6 +112,9 @@
       <workItem from="1774760930778" duration="5688000" />
       <workItem from="1774850181534" duration="4600000" />
       <workItem from="1775155037992" duration="8128000" />
+      <workItem from="1777015602373" duration="8818000" />
+      <workItem from="1777271036289" duration="2852000" />
+      <workItem from="1777341999385" duration="10791000" />
     </task>
     <servers />
   </component>

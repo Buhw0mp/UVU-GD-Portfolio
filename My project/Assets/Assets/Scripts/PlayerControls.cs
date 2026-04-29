@@ -1,3 +1,4 @@
+// csharp
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -24,7 +25,7 @@ namespace Assets.Scripts
         private bool isGrounded = true;
         public LayerMask groundLayer;
         private float groundCheckTimer = 0f;
-        private float groundCheckDelay = 0.3f;
+        private float groundCheckDelay = 0.1f;
         private float playerHeight;
         private float raycastDistance;
 
@@ -54,11 +55,14 @@ namespace Assets.Scripts
                 // fallback estimate
                 playerHeight = 2f * transform.localScale.y;
             }
-            raycastDistance = (playerHeight / 2f) + 0.2f;
+            raycastDistance = (playerHeight / 2f) + 0.6f;
 
-            // Hides the mouse
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            // Only lock/hide the mouse if the game is not paused (prevents stealing cursor when main menu is up)
+            if (Time.timeScale > 0f)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
         }
 
         void Update()
